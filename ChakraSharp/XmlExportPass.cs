@@ -2,9 +2,6 @@
 {
     using CppSharp.AST;
     using CppSharp.Passes;
-    using System.Linq;
-    using System.Text;
-    using System.Text.RegularExpressions;
     using System.Xml.Linq;
 
     public class XmlExportPass : TranslationUnitPass
@@ -42,14 +39,7 @@
             exportElement.SetAttributeValue("source", decl.TranslationUnit.FileName);
 
             var documentationElement = new XElement("Description");
-            var descriptionXmlBuilder = new StringBuilder();
-            Regex rx = new Regex(@"///\s*?(?<text>.*)", RegexOptions.ExplicitCapture);
-            foreach (Match match in rx.Matches(decl.Comment.Text))
-            {
-                var text = match.Groups["text"].Value.Trim();
-                descriptionXmlBuilder.AppendLine(text);
-            }
-            documentationElement.Add(new XCData(descriptionXmlBuilder.ToString()));
+            documentationElement.Add(new XCData(decl.Comment.Text));
             exportElement.Add(documentationElement);
 
             var parametersElement = new XElement("Parameters");
@@ -72,7 +62,10 @@
                         isOut = true;
                     }
                     else
-                        parameterElement.SetAttributeValue("type", pointer.Pointee.ToString().Replace("global::System.", "") + "*");
+                    {
+                        //Fallback to the original qualified type.
+                        parameterElement.SetAttributeValue("type", param.QualifiedType.ToString().Replace("global::System.", ""));
+                    }
                 }
                 else
                     parameterElement.SetAttributeValue("type", param.QualifiedType.ToString().Replace("global::System.", ""));
