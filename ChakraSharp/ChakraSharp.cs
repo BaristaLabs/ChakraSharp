@@ -14,6 +14,7 @@
     public class ChakraSharp : ILibrary
     {
         private readonly ChakraInfo m_chakraInfo;
+        private readonly XmlExportPass m_xmlExportPass;
 
         public ChakraSharp(ChakraInfo chakraInfo)
         {
@@ -21,6 +22,18 @@
                 throw new ArgumentNullException(nameof(chakraInfo));
 
             m_chakraInfo = chakraInfo;
+            m_xmlExportPass = new XmlExportPass();
+        }
+
+        /// <summary>
+        /// Gets the XDocument of the xml representation.
+        /// </summary>
+        public XDocument XmlExport
+        {
+            get
+            {
+                return m_xmlExportPass.Document;
+            }
         }
 
         public void Postprocess(Driver driver, ASTContext ctx)
@@ -97,7 +110,7 @@
 
         public void SetupPasses(Driver driver)
         {
-            driver.AddTranslationUnitPass(new XmlExportPass());
+            driver.AddTranslationUnitPass(m_xmlExportPass);
             driver.AddGeneratorOutputPass(new CommentOutputPass());
         }
 
