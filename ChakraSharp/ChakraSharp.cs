@@ -97,6 +97,8 @@
 
         public void SetupPasses(Driver driver)
         {
+            driver.AddTranslationUnitPass(new XmlExportPass());
+            driver.AddGeneratorOutputPass(new CommentOutputPass());
         }
 
         private string GetPath(string relativePath)
@@ -118,7 +120,7 @@
             options.MainModule.Defines.Add("BIT64");
 
             options.MainModule.Undefines.Add("_WIN32");
-            
+
             options.Headers.Add(Path.Combine(m_chakraInfo.ChakraPath, @"lib\Jsrt\ChakraCore.h"));
         }
     }
