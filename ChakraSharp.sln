@@ -7,6 +7,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChakraSharp", "ChakraSharp\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChakraSharp.CLI", "ChakraSharp.CLI\ChakraSharp.CLI.csproj", "{94FD1E37-0F65-4B47-B5DC-DEE6DDC2FF9F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CDD2533C-1CD9-4930-94BD-273FFDBAF5EA}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE. = LICENSE.
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

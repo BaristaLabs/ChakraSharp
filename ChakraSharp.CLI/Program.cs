@@ -13,6 +13,8 @@
             };
 
             ConsoleDriver.Run(new ChakraSharp(chakraInfo));
+
+            Console.WriteLine("Press enter to continue...");
             Console.ReadLine();
         }
     }
