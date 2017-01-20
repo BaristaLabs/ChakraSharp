@@ -179,9 +179,7 @@
             options.GeneratorKind = GeneratorKind.CSharp;
             options.OutputNamespace = "ChakraSharp";
             options.LibraryName = "ChakraCore";
-            options.UnityBuild = true;
             options.GenerateFinalizers = true;
-            options.MarshalCharAsManagedChar = true;
 
             options.MainModule.Defines.Add("_AMD64_");
             options.MainModule.Defines.Add("BIT64");
