@@ -63,7 +63,7 @@
                             foreach (var remarksLine in remarksElement.Value.Split('\n'))
                             {
                                 var remarksPara = new ParagraphComment();
-                                remarksPara.Content.Add(new TextComment { Text = remarksLine.ReplaceLineBreaks("") });
+                                remarksPara.Content.Add(new TextComment { Text = remarksLine.ReplaceLineBreaks("").Trim() });
                                 fullComment.Blocks.Add(remarksPara);
                             }
                         }
