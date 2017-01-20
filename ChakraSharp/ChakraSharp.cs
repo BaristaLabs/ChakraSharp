@@ -63,7 +63,7 @@
                             foreach (var remarksLine in remarksElement.Value.Split('\n'))
                             {
                                 var remarksPara = new ParagraphComment();
-                                remarksPara.Content.Add(new TextComment { Text = remarksLine.ReplaceLineBreaks("").Trim() });
+                                remarksPara.Content.Add(new TextComment { Text = remarksLine.ReplaceLineBreaks("") });
                                 fullComment.Blocks.Add(remarksPara);
                             }
                         }
@@ -74,7 +74,12 @@
                             var paramComment = new ParamCommandComment();
                             paramComment.Arguments.Add(new BlockCommandComment.Argument { Text = paramElement.Attribute("name").Value });
                             paramComment.ParagraphComment = new ParagraphComment();
-                            paramComment.ParagraphComment.Content.Add(new TextComment { Text = paramElement.Value.ReplaceLineBreaks("") });
+                            StringBuilder paramTextCommentBuilder = new StringBuilder();
+                            foreach (var paramLine in paramElement.Value.Split('\n'))
+                            {
+                                paramTextCommentBuilder.Append(paramLine.ReplaceLineBreaks("").Trim() + " ");
+                            }
+                            paramComment.ParagraphComment.Content.Add(new TextComment { Text = paramTextCommentBuilder.ToString() });
                             fullComment.Blocks.Add(paramComment);
                         }
                     }
