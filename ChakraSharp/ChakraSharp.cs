@@ -83,6 +83,16 @@
                             fullComment.Blocks.Add(paramComment);
                         }
                     }
+
+                    //Fix Enum comments
+                    var enumDecl = declaration as Enumeration;
+                    if (enumDecl != null)
+                    {
+                        foreach (var item in enumDecl.Items.Where(i => i.Comment != null))
+                        {
+                            item.Comment.BriefText = item.Comment.BriefText.Replace("<summary>", "").Replace("</summary>", "").Trim();
+                        }
+                    }
                 }
             }
         }
