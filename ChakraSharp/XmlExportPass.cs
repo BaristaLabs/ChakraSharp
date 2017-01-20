@@ -2,6 +2,7 @@
 {
     using CppSharp.AST;
     using CppSharp.Passes;
+    using System.Linq;
     using System.Xml.Linq;
 
     public class XmlExportPass : TranslationUnitPass
@@ -38,14 +39,16 @@
             exportElement.SetAttributeValue("target", "common");
             exportElement.SetAttributeValue("source", decl.TranslationUnit.FileName);
 
-            var documentationElement = new XElement("Description");
-            documentationElement.Add(new XCData(decl.Comment.Text));
-            exportElement.Add(documentationElement);
+            var descriptionElement = new XElement("Description");
+            descriptionElement.Add(new XText("\r\n"));
+            descriptionElement.Add(new XCData("\r\n" + decl.Comment.Text + "\r\n"));
+            descriptionElement.Add(new XText("\r\n    "));
+            exportElement.Add(descriptionElement);
 
             var parametersElement = new XElement("Parameters");
-            var isOut = false;
             foreach(var param in decl.Parameters)
             {
+                var isOut = false;
                 var parameterElement = new XElement("Parameter");
 
                 var typeDef = param.Type as TypedefType;
@@ -58,30 +61,64 @@
                     var pointerTypeDef = pointer.Pointee as TypedefType;
                     if (pointerTypeDef != null)
                     {
-                        parameterElement.SetAttributeValue("type", pointerTypeDef.Declaration.ToString());
                         isOut = true;
+                        parameterElement.SetAttributeValue("type", MapType(param, pointerTypeDef.Declaration.ToString(), ref isOut));
                     }
                     else
                     {
                         //Fallback to the original qualified type.
-                        parameterElement.SetAttributeValue("type", param.QualifiedType.ToString().Replace("global::System.", ""));
+                        parameterElement.SetAttributeValue("type", MapType(param, param.QualifiedType.ToString(), ref isOut));
                     }
                 }
                 else
-                    parameterElement.SetAttributeValue("type", param.QualifiedType.ToString().Replace("global::System.", ""));
+                    parameterElement.SetAttributeValue("type", MapType(param, param.QualifiedType.ToString(), ref isOut));
 
                 
                 parameterElement.SetAttributeValue("name", param.Name);
 
                 if (param.IsOut || isOut)
-                    parameterElement.SetAttributeValue("direction", "out");
+                    parameterElement.SetAttributeValue("direction", "Out");
 
                 parametersElement.Add(parameterElement);
             }
             exportElement.Add(parametersElement);
 
+            if (m_root.Elements().Where(e => e.Attribute("source").Value == exportElement.Attribute("source").Value).Count() == 0)
+                m_root.Add(new XComment("\r\n  ***************************************\r\n  **\r\n  ** " + exportElement.Attribute("source").Value + "\r\n  **\r\n  ***************************************\r\n  "));
+
             m_root.Add(exportElement);
             return false;
+        }
+
+        private string MapType(Parameter param, string type, ref bool isOut)
+        {
+            type = type.Replace("global::System.", "");
+
+            switch(type)
+            {
+                case "void**":
+                    type = "IntPtr";
+                    isOut = true;
+                    break;
+                case "BYTE":
+                    type = "byte[]";
+                    isOut = false;
+                    break;
+            }
+
+            if (type == "uint16_t" && param.DebugText == "uint16_t* buffer")
+            {
+                isOut = false;
+                type = "uint16_t*";
+            }
+
+            if (type == "uint16_t" && param.DebugText == "const uint16_t *content")
+            {
+                isOut = false;
+                type = "string";
+            }
+
+            return type;
         }
     }
 }
