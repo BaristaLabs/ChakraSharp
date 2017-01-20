@@ -8,13 +8,12 @@
     using System.Linq;
     using System.Text;
     using System.Text.RegularExpressions;
-    using System.Xml;
     using System.Xml.Linq;
 
     public class ChakraSharp : ILibrary
     {
         private readonly ChakraInfo m_chakraInfo;
-        private readonly XmlExportPass m_xmlExportPass;
+        private readonly XmlDefinitionTranslationPass m_xmlExportPass;
 
         public ChakraSharp(ChakraInfo chakraInfo)
         {
@@ -22,7 +21,7 @@
                 throw new ArgumentNullException(nameof(chakraInfo));
 
             m_chakraInfo = chakraInfo;
-            m_xmlExportPass = new XmlExportPass();
+            m_xmlExportPass = new XmlDefinitionTranslationPass();
         }
 
         /// <summary>
@@ -40,53 +39,94 @@
         {
             foreach (var translationUnit in ctx.TranslationUnits.Where(tu => tu.IsValid == true && tu.FileName.StartsWith("Chakra")))
             {
+                //Fix comments on generated cs code.
                 foreach (var declaration in translationUnit.Declarations)
                 {
                     if (declaration.Comment != null)
-                        declaration.Comment = CreateCommentFromXml(declaration.QualifiedLogicalName, declaration.Comment.Text);
-
-                    var enumDecl = declaration as Enumeration;
-                    if (enumDecl != null)
                     {
-                        foreach(var item in enumDecl.Items)
+                        var xDoc = GetOriginalDocumentationDocument(declaration.Comment.Text);
+                        var xRoot = xDoc.Root;
+
+                        declaration.Comment.Kind = RawCommentKind.BCPLSlash;
+                        var fullComment = declaration.Comment.FullComment;
+                        fullComment.Blocks.Clear();
+
+                        var summaryPara = new ParagraphComment();
+                        var summaryElement = xRoot.Element("summary");
+                        summaryPara.Content.Add(new TextComment { Text = summaryElement == null ? "" : summaryElement.Value.ReplaceLineBreaks("").Trim() });
+                        fullComment.Blocks.Add(summaryPara);
+
+                        
+                        var remarksElement = xRoot.Element("remarks");
+                        if (remarksElement != null)
                         {
-                            if (item.Comment != null)
-                                item.Comment = CreateCommentFromXml(item.QualifiedLogicalName, item.Comment.Text);
+                            foreach (var remarksLine in remarksElement.Value.Split('\n'))
+                            {
+                                var remarksPara = new ParagraphComment();
+                                remarksPara.Content.Add(new TextComment { Text = remarksLine.ReplaceLineBreaks("").Trim() });
+                                fullComment.Blocks.Add(remarksPara);
+                            }
+                        }
+
+                        var paramElements = xRoot.Elements("param");
+                        foreach(var paramElement in paramElements)
+                        {
+                            var paramComment = new ParamCommandComment();
+                            paramComment.Arguments.Add(new BlockCommandComment.Argument { Text = paramElement.Attribute("name").Value });
+                            paramComment.ParagraphComment = new ParagraphComment();
+                            paramComment.ParagraphComment.Content.Add(new TextComment { Text = paramElement.Value.ReplaceLineBreaks("") });
+                            fullComment.Blocks.Add(paramComment);
                         }
                     }
                 }
             }
         }
 
+        private readonly Regex m_rx = new Regex(@"///(?<text>.*)", RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+
+        private XDocument GetOriginalDocumentationDocument(string documentationText)
+        {
+            var descriptionXmlBuilder = new StringBuilder();
+            descriptionXmlBuilder.AppendLine("<description>");
+            foreach (Match match in m_rx.Matches(documentationText))
+            {
+                var text = match.Groups["text"].Value;
+                text = text.Replace("< 0", "&lt; 0");
+                text = text.Replace("<param name=\"referencingModule</param>", "<param name=\"referencingModule\"></param>");
+                descriptionXmlBuilder.Append(text);
+            }
+            descriptionXmlBuilder.AppendLine("</description>");
+            var descriptionXDoc = XDocument.Parse(descriptionXmlBuilder.ToString());
+            return descriptionXDoc;
+        }
+
         private RawComment CreateCommentFromXml(string parentQualifiedName, string descriptionXml)
         {
             var rc = new RawComment();
+            rc.Kind = RawCommentKind.BCPLSlash;
+            rc.FullComment = new FullComment();
+            rc.BriefText = "foo";
+            rc.Text = "foo";
 
             if (string.IsNullOrWhiteSpace(descriptionXml))
                 return rc;
 
-            var descriptionXmlBuilder = new StringBuilder();
-            descriptionXmlBuilder.AppendLine("<description>");
-            Regex rx = new Regex(@"///\s*?(?<text>.*)", RegexOptions.ExplicitCapture);
-            foreach (Match match in rx.Matches(descriptionXml))
-            {
-                var text = match.Groups["text"].Value.Trim();
-                text = text.Replace("< ", "&lt; ");
-                text = text.Replace(" >", " &gt;");
-                descriptionXmlBuilder.AppendLine(text);
-            }
-            descriptionXmlBuilder.AppendLine("</description>");
+            var blockComment = new VerbatimBlockComment();
+            blockComment.Lines.Add(new VerbatimBlockLineComment { Text = "foo" });
+            rc.FullComment.Blocks.Add(blockComment);
 
-            try
-            {
-                var descriptionXDoc = XDocument.Parse(descriptionXmlBuilder.ToString());
-                if (descriptionXDoc.Root.Element("summary") != null)
-                    rc.BriefText = descriptionXDoc.Root.Element("summary").Value.Trim().Replace("\n", " ").Replace("\r\n", " ");
-            }
-            catch
-            {
-                //Do nothing.
-            }
+            
+
+            //try
+            //{
+            //    var descriptionXDoc = XDocument.Parse(descriptionXmlBuilder.ToString());
+            //    if (descriptionXDoc.Root.Element("summary") != null)
+            //        rc.BriefText = descriptionXDoc.Root.Element("summary").Value.Trim().Replace("\n", " ").Replace("\r\n", " ");
+            //}
+            //catch
+            //{
+            //    //Do nothing.
+            //}
 
             //if (descriptionXDoc.Root.Element("remarks") != null)
             //    rc.Text = descriptionXDoc.Root.Element("remarks").Value.Trim();
@@ -111,7 +151,6 @@
         public void SetupPasses(Driver driver)
         {
             driver.AddTranslationUnitPass(m_xmlExportPass);
-            driver.AddGeneratorOutputPass(new CommentOutputPass());
         }
 
         private string GetPath(string relativePath)

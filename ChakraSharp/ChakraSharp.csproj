@@ -69,9 +69,8 @@
   <ItemGroup>
     <Compile Include="ChakraInfo.cs" />
     <Compile Include="ChakraSharp.cs" />
-    <Compile Include="CommentOutputPass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="XmlExportPass.cs" />
+    <Compile Include="XmlDefinitionTranslationPass.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

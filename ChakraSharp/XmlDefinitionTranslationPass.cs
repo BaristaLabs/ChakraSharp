@@ -7,7 +7,7 @@
     using System.Text.RegularExpressions;
     using System.Xml.Linq;
 
-    public class XmlExportPass : TranslationUnitPass
+    public class XmlDefinitionTranslationPass : TranslationUnitPass
     {
         private readonly Regex m_rx = new Regex(@"///(?<text>.*)", RegexOptions.ExplicitCapture | RegexOptions.Compiled);
         private readonly XDocument m_document;
@@ -18,7 +18,7 @@
             get { return m_document; }
         }
 
-        public XmlExportPass()
+        public XmlDefinitionTranslationPass()
         {
             m_document = new XDocument();
             m_document.Declaration = new XDeclaration("1.0", "UTF-8", "yes");
