@@ -7,6 +7,9 @@
     using System.Text.RegularExpressions;
     using System.Xml.Linq;
 
+    /// <summary>
+    /// Pass that takes a snapshot of the current state of the AST and generates an Xml Definition
+    /// </summary>
     public class XmlDefinitionTranslationPass : TranslationUnitPass
     {
         private readonly Regex m_rx = new Regex(@"///(?<text>.*)", RegexOptions.ExplicitCapture | RegexOptions.Compiled);
