@@ -59,8 +59,9 @@
         /// <param name="driver"></param>
         public void SetupPasses(Driver driver)
         {
-            driver.AddTranslationUnitPass(m_xmlExportPass);
             driver.AddTranslationUnitPass(new FixOutParamsPass());
+            driver.AddTranslationUnitPass(m_xmlExportPass);
+            driver.AddTranslationUnitPass(new FixObjectNamesPass());
             driver.AddTranslationUnitPass(new FixCommentsPass());
         }
 

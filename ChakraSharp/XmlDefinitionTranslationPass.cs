@@ -74,38 +74,38 @@
             var parametersElement = new XElement("Parameters");
             foreach(var param in decl.Parameters)
             {
-                var isOut = false;
                 var parameterElement = new XElement("Parameter");
 
                 var typeDef = param.Type as TypedefType;
                 var pointer = param.Type as PointerType;
 
+                string mappedType;
                 if (typeDef != null)
-                    parameterElement.SetAttributeValue("type", MapParameterType(decl, param, typeDef.Declaration.QualifiedName, ref isOut));
+                    mappedType = MapParameterType(decl, param, typeDef.Declaration.QualifiedName);
                 else if (pointer != null)
                 {
                     var pointerTypeDef = pointer.Pointee as TypedefType;
                     if (pointerTypeDef != null)
                     {
-                        isOut = true;
-                        parameterElement.SetAttributeValue("type", MapParameterType(decl, param, pointerTypeDef.Declaration.ToString(), ref isOut));
+                        mappedType = MapParameterType(decl, param, pointerTypeDef.Declaration.ToString());
                     }
                     else
                     {
                         //Fallback to the original qualified type.
-                        parameterElement.SetAttributeValue("type", MapParameterType(decl, param, param.QualifiedType.ToString(), ref isOut));
+                        mappedType = MapParameterType(decl, param, param.QualifiedType.ToString());
                     }
                 }
                 else
-                    parameterElement.SetAttributeValue("type", MapParameterType(decl, param, param.QualifiedType.ToString(), ref isOut));
+                    mappedType = MapParameterType(decl, param, param.QualifiedType.ToString());
 
+                parameterElement.SetAttributeValue("type", mappedType);
 
                 if (param.Name == "ref" || param.Name == "object")
                     parameterElement.SetAttributeValue("name", "@" + param.Name);
                 else
                     parameterElement.SetAttributeValue("name", param.Name);
 
-                if (param.IsOut || isOut)
+                if (param.IsOut || param.IsInOut)
                     parameterElement.SetAttributeValue("direction", "Out");
 
                 parametersElement.Add(parameterElement);
@@ -122,7 +122,7 @@
             return false;
         }
 
-        private string MapParameterType(Function decl, Parameter param, string type, ref bool isOut)
+        private string MapParameterType(Function decl, Parameter param, string type)
         {
             type = type.Replace("global::System.", "");
 
@@ -130,12 +130,21 @@
             switch(type)
             {
                 case "void**":
-                    type = "IntPtr";
-                    isOut = true;
+                    if (param.DebugText.StartsWith("JsModuleRecord*"))
+                        type = "JsModuleRecord";
+                    else if (param.DebugText.StartsWith("JsValueRef*") || param.DebugText.StartsWith("JsValueRef *"))
+                        type = "JsValueRef";
+                    else if (param.DebugText.StartsWith("JsContextRef *"))
+                        type = "JsContextRef";
+                    else if (param.DebugText.StartsWith("JsRuntimeHandle *"))
+                        type = "JsRuntimeHandle";
+                    else if (param.DebugText.StartsWith("JsPropertyIdRef *"))
+                        type = "JsPropertyIdRef";
+                    else
+                        type = "IntPtr";
                     break;
                 case "BYTE":
                     type = "byte[]";
-                    isOut = false;
                     break;
                 case "ChakraBytePtr":
                     type = "IntPtr";
@@ -145,7 +154,12 @@
                 case "uint*":
                 case "double*":
                     type = type.Replace("*", "");
-                    isOut = true;
+                    break;
+                case "global::ChakraSharp._JsPropertyIdType*":
+                case "global::ChakraSharp._JsValueType*":
+                case "global::ChakraSharp._JsTypedArrayType*":
+                case "global::ChakraSharp._JsDiagBreakOnExceptionAttributes*":
+                    type = type.Replace("global::ChakraSharp._", "").TrimEnd('*');
                     break;
                 case "JsThreadServiceCallback":
                 case "JsMemoryAllocationCallback":
@@ -155,19 +169,24 @@
                     break;
             }
 
-            if (type == "uint16_t" && param.DebugText == "uint16_t* buffer")
+            if (type == "uint" && (param.DebugText.StartsWith("size_t*") || param.DebugText.StartsWith("size_t *")))
             {
-                isOut = false;
+                type = "size_t";
+            }
+            else if (type == "sbyte*" && param.DebugText == "char* buffer")
+            {
+                type = "char*";
+            }
+            else if (type == "ushort*" && param.DebugText == "uint16_t* buffer")
+            {
                 type = "uint16_t*";
             }
             else if (type == "uint16_t" && param.DebugText == "const uint16_t *content")
             {
-                isOut = false;
                 type = "string";
             }
             else if (type == "JsValueRef" && param.DebugText == "JsValueRef *arguments")
             {
-                isOut = false;
                 type = "JsValueRef[]";
             }
             else if (type == "JsRuntimeHandle" && decl.Name == "JsDisposeRuntime")
