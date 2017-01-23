@@ -6,7 +6,7 @@ A quick & dirty pass at generating a [ChakraCore](https://github.com/Microsoft/C
 ###Advantages
 ---
  - Generates P/Invoke layer directly from ChakraCore Jsrt headers; any changes and additions made to ChakraCore can be integrated quickly and easily without manual porting
- - Code comments in the Jsrt headers are retained and brought over
+ - Function and parameter descriptions contained in the Jsrt headers are retained and included in the generated cs file.
  - Customization of the generated code can be performed by forking this project and adding/changing the passes.
  
 ###Instructions
