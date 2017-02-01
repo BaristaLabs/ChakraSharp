@@ -88,8 +88,6 @@
             foreach (Match match in m_rx.Matches(documentationText))
             {
                 var text = match.Groups["text"].Value;
-                text = text.Replace("< 0", "&lt; 0");
-                text = text.Replace("<param name=\"referencingModule</param>", "<param name=\"referencingModule\"></param>");
                 descriptionXmlBuilder.Append(text);
             }
             descriptionXmlBuilder.AppendLine("</description>");
