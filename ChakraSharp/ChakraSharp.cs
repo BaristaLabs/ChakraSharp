@@ -41,16 +41,18 @@
         {
             var options = driver.Options;
             options.GeneratorKind = GeneratorKind.CSharp;
-            options.OutputNamespace = "ChakraSharp";
-            options.LibraryName = "ChakraCore";
             options.GenerateFinalizers = true;
 
-            options.MainModule.Defines.Add("_AMD64_");
-            options.MainModule.Defines.Add("BIT64");
+            var chakraSharpModule = options.AddModule("ChakraSharp");
+            chakraSharpModule.OutputNamespace = "ChakraSharp";
+            chakraSharpModule.LibraryName = "ChakraCore";
 
-            options.MainModule.Undefines.Add("_WIN32");
+            chakraSharpModule.Defines.Add("_AMD64_");
+            chakraSharpModule.Defines.Add("BIT64");
 
-            options.Headers.Add(Path.Combine(m_chakraInfo.ChakraPath, @"lib\Jsrt\ChakraCore.h"));
+            chakraSharpModule.Undefines.Add("_WIN32");
+
+            chakraSharpModule.Headers.Add(Path.Combine(m_chakraInfo.ChakraPath, @"lib\Jsrt\ChakraCore.h"));
         }
 
         /// <summary>

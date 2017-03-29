@@ -15,9 +15,11 @@
 
             var expansions = parameter.PreprocessedEntities.OfType<MacroExpansion>();
 
-            if (expansions.Any(e => s_outParamMacros.Contains(e.Text)))
+            if (expansions.Count() > 0 && s_outParamMacros.Contains(expansions.Last().Text))
             {
-                if (parameter.DebugText != "uint16_t* buffer" && parameter.DebugText != "char* buffer")
+                if (parameter.DebugText != "uint16_t* buffer" &&
+                    parameter.DebugText != "char* buffer" &&
+                    parameter.DebugText != "size_t bufferSize")
                     parameter.Usage = ParameterUsage.Out;
 
                 var currentQualifiedType = parameter.QualifiedType;
@@ -56,23 +58,22 @@
                     case "long*":
                         targetType = new BuiltinType(PrimitiveType.Long);
                         break;
+                    case "ulong":
                     case "ulong*":
                         targetType = new BuiltinType(PrimitiveType.ULong);
                         break;
+                    case "global::ChakraSharp._JsParseScriptAttributes":
+                        targetType = ((TypedefType)parameter.Type).Declaration.Type;
+                        break;
+                    case "global::ChakraSharp._JsParseScriptAttributes*":
                     case "global::ChakraSharp._JsDiagBreakOnExceptionAttributes*":
-                        targetType = parameter.TranslationUnit.FindTypedef("JsDiagBreakOnExceptionAttributes").Type;
-                        break;
                     case "global::ChakraSharp._JsTypedArrayType*":
-                        targetType = parameter.TranslationUnit.FindTypedef("JsTypedArrayType").Type;
-                        break;
                     case "global::ChakraSharp._JsValueType*":
-                        targetType = parameter.TranslationUnit.FindTypedef("JsValueType").Type;
-                        break;
                     case "global::ChakraSharp._JsPropertyIdType*":
-                        targetType = parameter.TranslationUnit.FindTypedef("JsPropertyIdType").Type;
+                        targetType = ((TypedefType)((PointerType)parameter.Type).Pointee).Declaration.Type;
                         break;
                     default:
-                        throw new System.InvalidOperationException("Unexpected type:" + currentQualifiedType.ToString());
+                       throw new System.InvalidOperationException("Unexpected type:" + currentQualifiedType.ToString());
                 }
                 parameter.QualifiedType = new QualifiedType(new PointerType(new QualifiedType(targetType, new TypeQualifiers())));
             }

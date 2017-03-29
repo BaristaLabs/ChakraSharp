@@ -31,7 +31,7 @@
                 var xDoc = GetOriginalDocumentationDocument(declaration.Comment.Text);
                 var xRoot = xDoc.Root;
 
-                declaration.Comment.Kind = RawCommentKind.BCPLSlash;
+                declaration.Comment.Kind = CommentKind.BCPLSlash;
                 var fullComment = declaration.Comment.FullComment;
                 fullComment.Blocks.Clear();
 
