@@ -23,8 +23,10 @@
 
         public XmlDefinitionTranslationPass()
         {
-            m_document = new XDocument();
-            m_document.Declaration = new XDeclaration("1.0", "UTF-8", "yes");
+            m_document = new XDocument
+            {
+                Declaration = new XDeclaration("1.0", "UTF-8", "yes")
+            };
             m_root = new XElement("ChakraDefinitions");
             m_document.Add(m_root);
         }
@@ -84,8 +86,7 @@
                     mappedType = MapParameterType(decl, param, typeDef.Declaration.QualifiedName);
                 else if (pointer != null)
                 {
-                    var pointerTypeDef = pointer.Pointee as TypedefType;
-                    if (pointerTypeDef != null)
+                    if (pointer.Pointee is TypedefType pointerTypeDef)
                     {
                         mappedType = MapParameterType(decl, param, pointerTypeDef.Declaration.ToString());
                     }

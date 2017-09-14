@@ -15,10 +15,7 @@
 
         public ChakraSharp(ChakraInfo chakraInfo)
         {
-            if (chakraInfo == null)
-                throw new ArgumentNullException(nameof(chakraInfo));
-
-            m_chakraInfo = chakraInfo;
+            m_chakraInfo = chakraInfo ?? throw new ArgumentNullException(nameof(chakraInfo));
             m_xmlExportPass = new XmlDefinitionTranslationPass();
         }
 

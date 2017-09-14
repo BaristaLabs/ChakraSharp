@@ -69,8 +69,7 @@
             }
 
             //Fix Enum comments
-            var enumDecl = declaration as Enumeration;
-            if (enumDecl != null)
+            if (declaration is Enumeration enumDecl)
             {
                 foreach (var item in enumDecl.Items.Where(i => i.Comment != null))
                 {
