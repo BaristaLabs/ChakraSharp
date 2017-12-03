@@ -63,12 +63,12 @@
             {
                 var text = match.Groups["text"].Value;
                 text = text.Replace("< 0", "&lt; 0");
-                commentBuilder.Append("///" + text);
+                commentBuilder.Append("///" + text + "\r\n");
             }
 
             var descriptionElement = new XElement("Description");
             descriptionElement.Add(new XText("\r\n      "));
-            descriptionElement.Add(new XCData("\r\n" + commentBuilder.ToString() + "\r\n"));
+            descriptionElement.Add(new XCData("\r\n" + commentBuilder.ToString()));
             descriptionElement.Add(new XText("\r\n    "));
             exportElement.Add(descriptionElement);
 
