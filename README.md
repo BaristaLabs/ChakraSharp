@@ -2,6 +2,8 @@
 
 A quick & dirty pass at generating a [ChakraCore](https://github.com/Microsoft/ChakraCore) P/Invoke layer in C# using [CppSharp](https://github.com/mono/CppSharp)
 
+Note: [ChakraSharpCastXml](https://github.com/BaristaLabs/ChakraCoreCastXml) is an improvement over the approach offered here.
+
 ### Advantages
  - Generates P/Invoke layer directly from ChakraCore Jsrt headers; any changes and additions made to ChakraCore can be integrated quickly and easily without manual porting
  - Function and parameter descriptions contained in the Jsrt headers are retained and included in the generated cs file.
